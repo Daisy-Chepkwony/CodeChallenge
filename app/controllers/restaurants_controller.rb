@@ -1,19 +1,26 @@
 class RestaurantsController < ApplicationController
-    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
-    # added rescue_from
-    rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity_response
   
     def index
         restaurant = Restaurant.all
-        render json: restaurant
+        render json: restaurant, except:[:created_at,:updated_at]
     end
     def show
-        restaurant = find_restaurant
+        restaurant = find_restaurant.as_json(include: { pizzas: { only: [:id, :name, :ingredients] } }, except: [:created_at,:updated_at])
         render json: restaurant
-        
     end
+    def create
+      render json: Restaurant.create!(restaurant_params)
+    end
+   def update
+    
+    restaurant = find_restaurant
+    restaurant.update!(restaurant_params)
+
+   end 
+    
     def destroy
         restaurant = find_restaurant
+        restaurant.restaurant_pizzas.destroy_all
         restaurant.destroy
         head :no_content
     end
@@ -22,13 +29,8 @@ class RestaurantsController < ApplicationController
     def find_restaurant
        Restaurant.find_by(id: params[:id])
      end
-
-    def render_not_found_response
-      render json: { error: "Restaurant not found" }, status: :not_found
-    end
-  
-    def render_unprocessable_entity_response(invalid)
-      render json: { errors: invalid.record.errors }, status: :unprocessable_entity
+     def restaurant_params
+      params.permit(:name, :address)
     end
 
 

@@ -1,12 +1,9 @@
 class RestaurantPizzasController < ApplicationController
-    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found_response
-#     # added rescue_from
-    rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity_response
-  
-    
+
     def index
         restaurantpizzas = RestaurantPizza.all
-        render json: restaurantpizzas
+        render json: restaurantpizzas, except: [:created_at,:updated_at]
+
     end
 
     def create
@@ -19,6 +16,12 @@ class RestaurantPizzasController < ApplicationController
         render json: restaurantpizzas
 
     end
+    def update
+    
+      restaurant = find_restaurantpizzas
+      restaurant.update!(restaurantpizzas_params)
+  
+     end 
 
    private
   
@@ -30,13 +33,7 @@ class RestaurantPizzasController < ApplicationController
       params.permit(:price, :pizza_id, :restaurant_id)
     end
   
-    def render_not_found_response
-      render json: { error: "RestaurantPizza not found" }, status: :not_found
-    end
-  
-    def render_unprocessable_entity_response(invalid)
-      render json: { errors: invalid.record.errors }, status: :unprocessable_entity
-    end
+
     
 end
 
